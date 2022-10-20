@@ -103,7 +103,7 @@ void setup() {
   Serial.begin(115200);
 
   strip.begin();
-  strip.show();
+  strip.show(); // Initialize all pixels to 'off'
 
   client.enableDebuggingMessages();
 
@@ -127,17 +127,9 @@ void onConnectionEstablished() {
 
     struct time t = getTime();
 
-    strip.clear();
     setNextLeds(t.hour, t.minute);
 
-    for(int i = 0; i < (sizeof(nextLeds) / sizeof(nextLeds[0])); i++) {
-      if (nextLeds[i] == 1) {
-        strip.setPixelColor(i, color);      
-      }
-    
-      currentLeds[i] = nextLeds[i];
-    }
-    strip.show();
+    showNextLeds();
   });
 }
 
@@ -219,6 +211,7 @@ void setNextLeds(int hour, int minute) {
       nextLeds[89] = 1;
       nextLeds[90] = 1;
       nextLeds[91] = 1;
+      
       text += " ZEHN";
     } else if (isBetween(minute, 15, 19) || isBetween(minute, 45, 49)) {
       // VIERTEL
@@ -229,6 +222,7 @@ void setNextLeds(int hour, int minute) {
       nextLeds[81] = 1;
       nextLeds[82] = 1;
       nextLeds[83] = 1;
+      
       text += " VIERTEL";
     } else if (isBetween(minute, 20, 24) || isBetween(minute, 40, 44)) {
       // ZWANZIG
@@ -239,6 +233,7 @@ void setNextLeds(int hour, int minute) {
       nextLeds[96] = 1;
       nextLeds[97] = 1;
       nextLeds[98] = 1;     
+      
       text += " ZWANZIG";
     } else if (isBetween(minute, 25, 29)) {
       // FÜNF VOR HALB
@@ -255,6 +250,7 @@ void setNextLeds(int hour, int minute) {
       nextLeds[63] = 1;
       nextLeds[64] = 1;
       nextLeds[65] = 1;
+      
       text += " FÜNF VOR HALB";
     } else if (isBetween(minute, 30, 34)) {
       // HALB
@@ -329,10 +325,10 @@ void setNextLeds(int hour, int minute) {
       
       text += " ZWEI";
     } else if (hour == 3) {
-      nextLeds[38] = 1;
       nextLeds[39] = 1;
       nextLeds[40] = 1;
       nextLeds[41] = 1;
+      nextLeds[42] = 1;
       
       text += " DREI";
     } else if (hour == 4) {
@@ -489,4 +485,18 @@ void transition() {
 
     delay(100);
   }
+}
+
+void showNextLeds() {
+  strip.clear();
+
+  for(int i = 0; i < (sizeof(nextLeds) / sizeof(nextLeds[0])); i++) {
+    if (nextLeds[i] == 1) {
+      strip.setPixelColor(i, color);      
+    }
+  
+    currentLeds[i] = nextLeds[i];
+  }
+  
+  strip.show();
 }
