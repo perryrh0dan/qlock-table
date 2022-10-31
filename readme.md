@@ -3,7 +3,7 @@
 </h1>
 
 <h4>
-    Small word clock powered by esp8266 with mqtt support with stand
+    Small word clock with stand powered by esp8266 with mqtt support
 </h4>
 
 <div align="center">
