@@ -54,6 +54,16 @@ static String getDateTimeStringByParams(tm *newtime, char* pattern = (char *)"%d
     strftime(buffer, 30, pattern, newtime);
     return buffer;
 }
+
+static uint8_t splitColor ( uint32_t c, char value )
+{
+  switch ( value ) {
+    case 'r': return (uint8_t)(c >> 16);
+    case 'g': return (uint8_t)(c >>  8);
+    case 'b': return (uint8_t)(c >>  0);
+    default:  return 0;
+  }
+}
  
 /**
  * Input time in epoch format format and return String with format pattern
@@ -117,12 +127,35 @@ void setup() {
 }
 
 void onConnectionEstablished() {
+  String currentValue = String(splitColor(color, 'r')) + "," + String(splitColor(color, 'g')) + "," + String(splitColor(color, 'b'));
+  client.publish(STAT, "color", currentValue);
+  
   client.subscribe("color", [] (const String &payload)  {
-    uint8_t red = payload.substring(0, 3).toInt();
-    uint8_t green = payload.substring(3, 6).toInt();
-    uint8_t blue = payload.substring(6, 9).toInt();
-    uint8_t white = payload.substring(9, 12).toInt();
+    Serial.print("Received color: ");
+    Serial.println(payload);
+    
+    char rgba[25];
+    
+    strcpy(rgba, payload.c_str());
 
+    uint8_t red, green, blue, white, counter;
+    char *token = strtok(rgba, ",");
+    while( token != NULL ) {
+      if (counter == 0) {
+        red = atoi(token);
+      } else if (counter == 1) {
+        green = atoi(token);
+      } else if (counter == 2) {
+        blue = atoi(token);
+      } else if (counter == 3) {
+        white = atoi(token);
+      }
+
+      counter++;
+          
+      token = strtok(NULL, ",");
+    }
+      
     color = strip.Color(red, green, blue, white);
 
     struct time t = getTime();
