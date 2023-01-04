@@ -200,7 +200,7 @@ void loop() {
 }
 
 struct time getTime() {
-  String timeStr = getEpochStringByParams(CE.toLocal(timeClient.getEpochTime()), "%H:%M:%S");
+  String timeStr = getEpochStringByParams(CE.toLocal(timeClient.getEpochTime()), "%I:%M:%S");
   struct time t;
 
   int indexFirst = timeStr.indexOf(':');
@@ -337,15 +337,7 @@ void setNextLeds(int hour, int minute) {
       hour = hour - 12;
     }
 
-    if (hour == 0) {
-      nextLeds[56] = 1;
-      nextLeds[57] = 1;
-      nextLeds[58] = 1;
-      nextLeds[59] = 1;
-      nextLeds[60] = 1;
-      
-      text += " ZWÖLF";
-    } else if(hour == 1) {
+    if(hour == 1) {
       if (minute < 5) {
         nextLeds[46] = 1;
         nextLeds[47] = 1;
@@ -432,6 +424,14 @@ void setNextLeds(int hour, int minute) {
       nextLeds[24] = 1;
       
       text += " ELF";
+    } else if (hour == 12) {
+      nextLeds[56] = 1;
+      nextLeds[57] = 1;
+      nextLeds[58] = 1;
+      nextLeds[59] = 1;
+      nextLeds[60] = 1;
+      
+      text += " ZWÖLF";
     }
 
     // Uhr
