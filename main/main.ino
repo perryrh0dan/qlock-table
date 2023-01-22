@@ -67,12 +67,12 @@ static uint8_t splitRGBColor ( uint32_t c, char value )
  
 static uint32_t saturateColor(uint32_t c, float saturation) 
 {  
-  uint8_t w = floor((uint8_t)(c >> 24) * saturation);
-  uint8_t r = floor((uint8_t)(c >> 16) * saturation);
-  uint8_t g = floor((uint8_t)(c >> 8) * saturation);
-  uint8_t b = floor((uint8_t)c * saturation);
+  uint8_t w = floor((uint8_t)(c >> 24));
+  uint8_t r = floor((uint8_t)(c >> 16));
+  uint8_t g = floor((uint8_t)(c >> 8));
+  uint8_t b = floor((uint8_t)c);
 
-  uint32_t newColor = strip.Color(r,g,b,w);
+  uint32_t newColor = strip.Color(r + (255 - r) * saturation,g + (255 - g) * saturation, b + (255 - b) * saturation, w + (255 - w) * saturation);
   
   return newColor;
 }
