@@ -72,7 +72,7 @@ static uint32_t saturateColor(uint32_t c, float saturation)
   uint8_t g = floor((uint8_t)(c >> 8));
   uint8_t b = floor((uint8_t)c);
 
-  uint32_t newColor = strip.Color(r + (255 - r) * saturation,g + (255 - g) * saturation, b + (255 - b) * saturation, w + (255 - w) * saturation);
+  uint32_t newColor = strip.Color(r + (255 - r) * saturation,g + (255 - g) * saturation, b + (255 - b) * saturation, 0);
   
   return newColor;
 }
@@ -99,6 +99,19 @@ static boolean isBetween(int value, int min, int max) {
 }
 
 /**
+ * Check if a certain value is in the given list
+ */
+static boolean isIn(uint8_t value, uint8_t list[]) {
+  for(int i = 0; i < (sizeof(list) / sizeof(list[0])); i++) {
+    if (list[i] == value) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * Get led number by X and Y coordinates. 0/0 is bottom left.
  */
 static int getLedXY(uint8_t startX, uint8_t startY) {
@@ -114,7 +127,7 @@ struct time {
   uint8_t minute;
 };
 
-int lastUpdate;
+int lastUpdate = 0;
 uint32_t color = strip.Color(0,255,0,0);
 
 uint8_t currentLeds[114];
@@ -190,19 +203,12 @@ void loop() {
       setNextLeds(t.hour, t.minute);
 
       if (currentTimeStamp % 5 == 0 || lastUpdate == 0) {
+        Serial.println("Start transition");
         transition();        
+      } else {
+        showNextLeds();
       }
-
-      strip.clear();
-      for(int i = 0; i < (sizeof(nextLeds) / sizeof(nextLeds[0])); i++) {
-        if (nextLeds[i] == 1) {
-          strip.setPixelColor(i, color);      
-        }
-    
-        currentLeds[i] = nextLeds[i];
-      }
-      strip.show();
-
+      
       lastUpdate = currentTimeStamp;
     }
 
@@ -489,11 +495,13 @@ void transition() {
 
   // Add all current active leds to the additionalLeds, they should be active till they are "hit" by the line in the same column
   for(int i = 0; i < (sizeof(currentLeds) / sizeof(currentLeds[0])); i++) {
-    additionalLeds[i] = currentLeds[i];
+    if (isBetween(i, 0, 109)) {
+      additionalLeds[i] = currentLeds[i];      
+    }
   }
 
   // Start the main transition cycles
-  for (int i = 0; i < iterations; i++) {   
+  for (int i = 0; i <= iterations; i++) {   
     // Clear the intermediate led array
     memset(interLeds, 0, sizeof(interLeds));
 
@@ -515,7 +523,7 @@ void transition() {
         
         float saturation = random(0, 100) / 100.0;
         uint32_t newColor = color;
-        if (saturation > 0.5 && i <= 109) {
+        if (saturation < 0.5 && i <= 109 && nextLeds[i] != 1) {
             newColor = saturateColor(color, saturation);
         }
 
@@ -531,7 +539,7 @@ void transition() {
       if (additionalLeds[i] == 1) {
         float saturation = random(0, 100) / 100.0;
         uint32_t newColor = color;
-        if (saturation > 0.5 && i <= 109) {
+        if (saturation < 0.5 && i <= 109 && nextLeds[i] != 1) {
             newColor = saturateColor(color, saturation);
         }
 
@@ -541,7 +549,7 @@ void transition() {
 
     strip.show();
 
-    delay(100);
+    delay(130);
   }
 }
 
