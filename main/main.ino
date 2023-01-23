@@ -55,7 +55,7 @@ static String getDateTimeStringByParams(tm *newtime, char* pattern = (char *)"%d
     return buffer;
 }
 
-static uint8_t splitColor ( uint32_t c, char value )
+static uint8_t splitRGBColor ( uint32_t c, char value )
 {
   switch ( value ) {
     case 'r': return (uint8_t)(c >> 16);
@@ -65,12 +65,23 @@ static uint8_t splitColor ( uint32_t c, char value )
   }
 }
  
+static uint32_t saturateColor(uint32_t c, float saturation) 
+{  
+  uint8_t w = floor((uint8_t)(c >> 24));
+  uint8_t r = floor((uint8_t)(c >> 16));
+  uint8_t g = floor((uint8_t)(c >> 8));
+  uint8_t b = floor((uint8_t)c);
+
+  uint32_t newColor = strip.Color(r + (255 - r) * saturation,g + (255 - g) * saturation, b + (255 - b) * saturation, 0);
+  
+  return newColor;
+}
+
 /**
  * Input time in epoch format format and return String with format pattern
  * by Renzo Mischianti <www.mischianti.org> 
  */
 static String getEpochStringByParams(long time, char* pattern = (char *)"%d/%m/%Y %I:%M:%S"){
-//    struct tm *newtime;
     tm newtime;
     newtime = getDateTimeByParams(time);
     return getDateTimeStringByParams(&newtime, pattern);
@@ -82,6 +93,19 @@ static String getEpochStringByParams(long time, char* pattern = (char *)"%d/%m/%
 static boolean isBetween(int value, int min, int max) {
   if (value >= min && value <= max) {
     return true;
+  }
+
+  return false;
+}
+
+/**
+ * Check if a certain value is in the given list
+ */
+static boolean isIn(uint8_t value, uint8_t list[]) {
+  for(int i = 0; i < (sizeof(list) / sizeof(list[0])); i++) {
+    if (list[i] == value) {
+      return true;
+    }
   }
 
   return false;
@@ -103,8 +127,8 @@ struct time {
   uint8_t minute;
 };
 
-int lastUpdate;
-uint32_t color = strip.Color(0,0,0,255);
+int lastUpdate = 0;
+uint32_t color = strip.Color(0,255,0,0);
 
 uint8_t currentLeds[114];
 uint8_t nextLeds[114];
@@ -127,7 +151,7 @@ void setup() {
 }
 
 void onConnectionEstablished() {
-  String currentValue = String(splitColor(color, 'r')) + "," + String(splitColor(color, 'g')) + "," + String(splitColor(color, 'b'));
+  String currentValue = String(splitRGBColor(color, 'r')) + "," + String(splitRGBColor(color, 'g')) + "," + String(splitRGBColor(color, 'b'));
   client.publish(STAT, "color", currentValue);
   
   client.subscribe("color", [] (const String &payload)  {
@@ -179,19 +203,12 @@ void loop() {
       setNextLeds(t.hour, t.minute);
 
       if (currentTimeStamp % 5 == 0 || lastUpdate == 0) {
+        Serial.println("Start transition");
         transition();        
+      } else {
+        showNextLeds();
       }
-
-      strip.clear();
-      for(int i = 0; i < (sizeof(nextLeds) / sizeof(nextLeds[0])); i++) {
-        if (nextLeds[i] == 1) {
-          strip.setPixelColor(i, color);      
-        }
-    
-        currentLeds[i] = nextLeds[i];
-      }
-      strip.show();
-
+      
       lastUpdate = currentTimeStamp;
     }
 
@@ -478,19 +495,21 @@ void transition() {
 
   // Add all current active leds to the additionalLeds, they should be active till they are "hit" by the line in the same column
   for(int i = 0; i < (sizeof(currentLeds) / sizeof(currentLeds[0])); i++) {
-    additionalLeds[i] = currentLeds[i];
+    if (isBetween(i, 0, 109)) {
+      additionalLeds[i] = currentLeds[i];      
+    }
   }
 
   // Start the main transition cycles
-  for (int i = 0; i < iterations; i++) {   
-    // Clear the intermediat led array
+  for (int i = 0; i <= iterations; i++) {   
+    // Clear the intermediate led array
     memset(interLeds, 0, sizeof(interLeds));
 
     for (int col = 0; col < 11; col++) {
       for (int row = 0; row < lengths[col]; row++) {
         int led = getLedXY(col, startPositions[col] - i + row);
 
-        if (isBetween(led, 0, 110)) {
+        if (isBetween(led, 0, 109)) {
           interLeds[led] = 1;
         } 
       }
@@ -502,7 +521,13 @@ void transition() {
       if (interLeds[i] == 1) {
         additionalLeds[i] = 0;
         
-        strip.setPixelColor(i, color);      
+        float saturation = random(0, 100) / 100.0;
+        uint32_t newColor = color;
+        if (saturation < 0.5 && i <= 109 && nextLeds[i] != 1) {
+            newColor = saturateColor(color, saturation);
+        }
+
+        strip.setPixelColor(i, newColor);      
       }
 
       if (nextLeds[i] == 1) {
@@ -512,13 +537,19 @@ void transition() {
 
     for(int i = 0; i < (sizeof(additionalLeds) / sizeof(additionalLeds[0])); i++) {
       if (additionalLeds[i] == 1) {
-        strip.setPixelColor(i, color);
+        float saturation = random(0, 100) / 100.0;
+        uint32_t newColor = color;
+        if (saturation < 0.5 && i <= 109 && nextLeds[i] != 1) {
+            newColor = saturateColor(color, saturation);
+        }
+
+        strip.setPixelColor(i, newColor);
       }
     }
 
     strip.show();
 
-    delay(100);
+    delay(130);
   }
 }
 
