@@ -549,7 +549,7 @@ void transition() {
 
     strip.show();
 
-    delay(130);
+    delay(110);
   }
 }
 
