@@ -20,6 +20,7 @@
             "includePath": [
                 "C:\\Users\\thomas\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.0.2\\tools\\sdk\\include",
                 "C:\\Users\\thomas\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.0.2\\tools\\sdk\\lwip2\\include",
+                "C:\\Users\\thomas\\AppData\\Local\\Temp\\arduino\\sketches\\DB2BDD6E2DC39148EDD1F98C5C1730D3\\core",
                 "C:\\Users\\thomas\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.0.2\\cores\\esp8266",
                 "C:\\Users\\thomas\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.0.2\\variants\\nodemcu",
                 "C:\\Users\\thomas\\Documents\\Arduino\\libraries\\EspHomeClient",
@@ -53,7 +54,7 @@
                 "TCP_MSS=536",
                 "LWIP_FEATURES=1",
                 "LWIP_IPV6=0",
-                "ARDUINO=10812",
+                "ARDUINO=10607",
                 "ARDUINO_ESP8266_NODEMCU_ESP12E",
                 "ARDUINO_ARCH_ESP8266",
                 "ARDUINO_BOARD=\"ESP8266_NODEMCU_ESP12E\"",
